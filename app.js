@@ -1,12 +1,10 @@
 function buildCharts(patientID) {
-// #################################################
+//// #################################################
 // READ & INTERPRET THE DATA
-// #################################################
+//// #################################################    
 
     // Read in the JSON data
-    // confirm data is in console
     d3.json("samples.json").then((data => {
-        console.log(data);
 
         // Define samples
         var samples = data.samples
@@ -25,15 +23,111 @@ function buildCharts(patientID) {
 
         // use otu_labels as the hovertext for bar chart
         var otu_labels = filteredSample.otu_labels
+//// #################################################
+// BAR CHART
+//// #################################################
+        // Create the trace
+        var bar_data = [{
+            // Use otu_ids for the x values
+            x: sample_values.slice(0, 10).reverse(),
+            // Use sample_values for the y values
+            y: otu_ids.slice(0, 10).map(otu_id => `OTU ${otu_id}`).reverse(),
+            // Use otu_labels for the text values
+            text: otu_labels.slice(0, 10).reverse(),
+            type: 'bar',
+            orientation: 'h',
+            marker: {
+                color: '#FF5733'
+            },
+        }]
 
+
+        // Define plot layout
+        var bar_layout = {
+            title: "Top 10 Microbial Species in Belly Buttons",
+            xaxis: { title: "Bacteria Sample Values" },
+            yaxis: { title: "OTU IDs" }
+        };
+
+        // Display plot
+        Plotly.newPlot('bar', bar_data, bar_layout)
+//// #################################################
+// BUBBLE CHART
+//// #################################################
+        // Create the trace
+        var bubble_data = [{
+            // Use otu_ids for the x values
+            x: otu_ids,
+            // Use sample_values for the y values
+            y: sample_values,
+            // Use otu_labels for the text values
+            text: otu_labels,
+            mode: 'markers',
+            marker: {
+                // Use otu_ids for the marker colors
+                color: otu_ids,
+                // Use sample_values for the marker size
+                size: sample_values,
+                // loading.io allowa you to change color scale options
+                colorscale: 'YlGnBu'
+            }
+        }];
+
+
+        // Define plot layout
+        var layout = {
+            title: "Belly Button Samples",
+            xaxis: { title: "OTU IDs" },
+            yaxis: { title: "Sample Values" }
+        };
+
+        // Display plot
+        Plotly.newPlot('bubble', bubble_data, layout)
+//// #################################################
+// GAUGE CHART
+//// ################################################# 
+        // Create variable for washing frequency
+        var washFreq = filteredMetadata.wfreq
+
+        // Create the trace
+        var gauge_data = [
+            {
+                domain: { x: [0, 1], y: [0, 1] },
+                value: washFreq,
+                title: { text: "Washing Frequency (Times per Week)" },
+                type: "indicator",
+                mode: "gauge+number",
+                gauge: {
+                    bar: {color: 'white'},
+                    axis: { range: [null, 9] },
+                    steps: [
+                        { range: [0, 2], color: '#DAF7A6' },
+                        { range: [2, 4], color: '#FFC300' },
+                        { range: [4, 6], color: '#FF5733' },
+                        { range: [6, 8], color: '#C70039' },
+                        { range: [6, 8], color: '#900C3F' },
+                        { range: [8, 10],color: '#581845' },
+                    ],
+                    // threshold: {
+                    //     line: { color: "white" },
+                    // }
+                }
+            }
+        ];
+
+        // Define Plot layout
+        var gauge_layout = { width: 500, height: 400, margin: { t: 0, b: 0 } };
+
+        // Display plot
+        Plotly.newPlot('gauge', gauge_data, gauge_layout);
     }))
 
 
 };
 
-// #################################################
-// Demographic Info
-// #################################################
+// // #################################################
+// // Demographic Info
+// // #################################################
 function populateDemoInfo(patientID) {
 
     var demographicInfoBox = d3.select("#sample-metadata");
@@ -50,17 +144,19 @@ function populateDemoInfo(patientID) {
 
     })
 }
-// #################################################
-// FUNCTION 
-// #################################################
+
+// // #################################################
+// // Patient ID function
+// // #################################################
 function optionChanged(patientID) {
     console.log(patientID);
     buildCharts(patientID);
     populateDemoInfo(patientID);
 }
-// #################################################
-// Test subject ID numbers
-// #################################################
+
+// // #################################################
+// // Test subject ID numbers
+// // #################################################
 function initDashboard() {
     var dropdown = d3.select("#selDataset")
     d3.json("samples.json").then(data => {
